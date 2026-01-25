@@ -31,7 +31,6 @@ var produk = []Produk{
 var categories = []Category{
 	{ID: 1, Name: "Makanan", Description: "Produk makanan"},
 	{ID: 2, Name: "Minuman", Description: "Produk minuman"},
-	{ID: 3, Name: "Alat Tulis", Description: "Produk alat tulis"},
 }
 
 

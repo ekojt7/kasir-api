@@ -31,7 +31,6 @@ var produk = []Produk{
 var categories = []Category{
 	{ID: 1, Name: "Makanan", Description: "Produk makanan"},
 	{ID: 2, Name: "Minuman", Description: "Produk minuman"},
-	{ID: 3, Name: "Alat Tulis", Description: "Produk alat tulis"},
 }
 
 
@@ -242,31 +241,6 @@ func main() {
 		}
 
 	})
-
-	// GET /categories/{id}
-	// PUT /categories/{id}
-	// DELETE /categories/{id}
-	http.HandleFunc("/categories/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			getCategoryByID(w, r)
-		} else if r.Method == "PUT" {
-			updateCategory(w, r)
-		} else if r.Method == "DELETE" {
-			deleteCategory(w, r)
-		}
-	})
-
-	// GET /categories
-	// POST /categories
-	http.HandleFunc("/categories", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(categories)
-		} else if r.Method == "POST" {
-			createCategory(w, r)
-		}
-	})
-
 
 	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
