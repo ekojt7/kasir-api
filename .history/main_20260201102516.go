@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+
 type Config struct {
 	Port   string `mapstructure:"PORT"`
 	DBConn string `mapstructure:"DB_CONN"`
@@ -26,7 +27,7 @@ func main() {
 
 	if _, err := os.Stat(".env"); err == nil {
 		viper.SetConfigFile(".env")
-		viper.SetConfigType("env")
+		viper.SetConfigType("env") // ← Tambahkan ini
 		if err := viper.ReadInConfig(); err != nil {
 			log.Fatalf("Error reading config: %v", err)
 		}
@@ -54,7 +55,7 @@ func main() {
 	http.HandleFunc("/api/produk", productHandler.HandleProducts)
 	http.HandleFunc("/api/produk/", productHandler.HandleProductByID)
 
-	// Health check endpoint
+	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
@@ -63,12 +64,5 @@ func main() {
 		})
 	})
 
-	// Start server - INI YANG KURANG!
-	serverAddr := ":" + config.Port
-	fmt.Printf("🚀 Server running on http://localhost%s\n", serverAddr)
-	fmt.Println("Press Ctrl+C to stop")
-	
-	if err := http.ListenAndServe(serverAddr, nil); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	fmt.Println("Server running di localhost:" + config.Port)
 }

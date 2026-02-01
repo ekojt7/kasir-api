@@ -26,12 +26,9 @@ func main() {
 
 	if _, err := os.Stat(".env"); err == nil {
 		viper.SetConfigFile(".env")
-		viper.SetConfigType("env")
-		if err := viper.ReadInConfig(); err != nil {
-			log.Fatalf("Error reading config: %v", err)
-		}
+		_ = viper.ReadInConfig()
 	}
-	
+
 	config := Config{
 		Port:   viper.GetString("PORT"),
 		DBConn: viper.GetString("DB_CONN"),
@@ -40,11 +37,9 @@ func main() {
 	// Setup database
 	db, err := database.InitDB(config.DBConn)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		log.Fatal("Failed to initialize database:", err)
 	}
 	defer db.Close()
-
-	fmt.Println("✅ Database connected successfully!")
 
 	productRepo := repositories.NewProductRepository(db)
 	productService := services.NewProductService(productRepo)
@@ -54,7 +49,7 @@ func main() {
 	http.HandleFunc("/api/produk", productHandler.HandleProducts)
 	http.HandleFunc("/api/produk/", productHandler.HandleProductByID)
 
-	// Health check endpoint
+	// localhost:8080/health
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
@@ -62,13 +57,10 @@ func main() {
 			"message": "API Running",
 		})
 	})
+	fmt.Println("Server running di localhost:" + config.Port)
 
-	// Start server - INI YANG KURANG!
-	serverAddr := ":" + config.Port
-	fmt.Printf("🚀 Server running on http://localhost%s\n", serverAddr)
-	fmt.Println("Press Ctrl+C to stop")
-	
-	if err := http.ListenAndServe(serverAddr, nil); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	err = http.ListenAndServe(":"+config.Port, nil)
+	if err != nil {
+		fmt.Println("gagal running server")
 	}
 }
