@@ -1,80 +1,29 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"kasir-api/database"
-	"kasir-api/handlers"
-	"kasir-api/repositories"
-	"kasir-api/services"
+	"database/sql"
 	"log"
-	"net/http"
 	"os"
-	"strings"
 
-	"github.com/spf13/viper"
+	_ "github.com/lib/pq"
 )
 
-type Config struct {
-	Port   string `mapstructure:"PORT"`
-	DBConn string `mapstructure:"DB_CONN"`
-}
-
 func main() {
-	viper.AutomaticEnv()
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	conn := os.Getenv("DB_CONN")
+	log.Println("DB_CONN =", conn)
 
-	if _, err := os.Stat(".env"); err == nil {
-		viper.SetConfigFile(".env")
-		viper.SetConfigType("env")
-		if err := viper.ReadInConfig(); err != nil {
-			log.Fatalf("Error reading config: %v", err)
-		}
-	}
-	
-	config := Config{
-		Port:   viper.GetString("PORT"),
-		DBConn: viper.GetString("DB_CONN"),
+	if conn == "" {
+		log.Fatal("DB_CONN is EMPTY")
 	}
 
-	// Setup database
-	db, err := database.InitDB(config.DBConn)
+	db, err := sql.Open("postgres", conn)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		log.Fatal("OPEN ERROR:", err)
 	}
-	defer db.Close()
 
-	fmt.Println("✅ Database connected successfully!")
-
-	productRepo := repositories.NewProductRepository(db)
-	productService := services.NewProductService(productRepo)
-	productHandler := handlers.NewProductHandler(productService)
-
-	categoryRepo := repositories.NewCategoryRepository(db)
-	categoryService := services.NewCategoryService(categoryRepo)
-	categoryHandler := handlers.NewCategoryHandler(categoryService)
-
-	// Setup routes
-	http.HandleFunc("/api/produk", productHandler.HandleProducts)
-	http.HandleFunc("/api/produk/", productHandler.HandleProductByID)
-	http.HandleFunc("/api/categories", categoryHandler.HandleCategories)
-	http.HandleFunc("/api/categories/", categoryHandler.HandleCategoryByID)
-	
-	// Health check endpoint
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"status":  "OK",
-			"message": "API Running",
-		})
-	})
-
-	// Start server - INI YANG KURANG!
-	serverAddr := ":" + config.Port
-	fmt.Printf("🚀 Server running on http://localhost%s\n", serverAddr)
-	fmt.Println("Press Ctrl+C to stop")
-	
-	if err := http.ListenAndServe(serverAddr, nil); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	if err := db.Ping(); err != nil {
+		log.Fatal("PING ERROR:", err)
 	}
+
+	log.Println("✅ DATABASE CONNECTED SUCCESSFULLY")
 }
